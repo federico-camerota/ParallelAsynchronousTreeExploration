@@ -50,8 +50,7 @@ class TreeExplorer:
         workers_list = []
         while not self._nodes_list.empty() or len(workers_list) > 0:
             while not self._nodes_list.empty() and len(workers_list) < self._n_workers:
-                # next_node = self._nodes_list.get()[1]
-                next_node = self._nodes_list.get()
+                next_node = self._nodes_list.get()[1]
                 if not self.__pruning_condition(next_node, self._state):
                     workers_list.append(self.__process_node.remote(next_node, self._state))
 

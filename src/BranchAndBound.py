@@ -30,7 +30,7 @@ def update_state(new_state, old_state):
 
 def process_node(node, state):
     if len(node.offers) == 0:
-        return State(node.reduction, node.solution, True)
+        return State(node.reduction, node.solution, True), []
 
     child_list = []
     new_state = state
