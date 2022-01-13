@@ -31,9 +31,12 @@ class TreeExplorer:
         Explores the tree and returns the resulting final state
     """
 
-    def __init__(self, init_state, update_state, process_node, pruning_condition=lambda n, s: False,
+    def __init__(self, init_state, init_node, update_state, process_node, pruning_condition=lambda n, s: False,
                  n_workers=os.cpu_count()):
+
         self._nodes_list = PriorityQueue()
+        self._nodes_list.put(init_node)
+
         self._state = init_state
         self.__update_state = update_state
         self.__pruning_condition = pruning_condition
@@ -47,13 +50,18 @@ class TreeExplorer:
         workers_list = []
         while not self._nodes_list.empty() or len(workers_list) > 0:
             while not self._nodes_list.empty() and len(workers_list) < self._n_workers:
-                next_node = self._nodes_list.get()[1]
+                # next_node = self._nodes_list.get()[1]
+                next_node = self._nodes_list.get()
                 if not self.__pruning_condition(next_node, self._state):
-                    workers_list.append(self.__process_node.remote(next_node))
+                    workers_list.append(self.__process_node.remote(next_node, self._state))
 
             ready, workers_list = ray.wait(workers_list)
-            new_state, child_nodes = ray.get(ready)
+            new_state, child_nodes = ray.get(ready)[0]
             self._state = self.__update_state(new_state, self._state)
             [self._nodes_list.put(child) for child in child_nodes if not self.__pruning_condition(child, self._state)]
 
         return self._state
+
+    @staticmethod
+    def close_ray():
+        ray.shutdown()
